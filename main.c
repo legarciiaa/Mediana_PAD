@@ -3,7 +3,7 @@
 #include <pthread.h>
 #include <sys\timeb.h>
 
-pthread_mutex_t m;
+static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
 
 /* run this program using the console pauser or add your own getch, system("pause") or input loop */
 
@@ -45,44 +45,43 @@ void *updateValues(void *parameters){
 	for(numRows=params->beginRow; numRows<params->endRow; numRows++){
 		for(numColumns=params->beginColumn; numColumns<params->endColumn; numColumns++){
            sumMed=0; divMed=0;
-           /* pthread_mutex_lock(&m);*/
-           imgValue= fscanf(params->input, "%d", &currentValue);
-           printf("\nROW: %d COLUMNS: %d", numRows,numColumns);
+           pthread_mutex_lock(&m);
+               imgValue= fscanf(params->input, "%d", &currentValue);
+               printf("\nROW: %d COLUMNS: %d", numRows,numColumns);
 
-           /*discover the limits*/
-           if (numRows>= midFilter ){
-               beginRowMed= numRows - midFilter;
-           }else{
-               beginRowMed=0;
-           }
+               /*discover the limits*/
+               if (numRows>= midFilter ){
+                   beginRowMed= numRows - midFilter;
+               }else{
+                   beginRowMed=0;
+               }
 
-           if (numColumns>= midFilter){
-               beginColumnMed= numColumns - midFilter;
-           }else{
-               beginColumnMed= 0;
-           }
-			
-           endRowMed= numRows + midFilter;
-           if (endRowMed > params->newImage->numRows) {endRowMed=params->newImage->numRows;}
+               if (numColumns>= midFilter){
+                   beginColumnMed= numColumns - midFilter;
+               }else{
+                   beginColumnMed= 0;
+               }
 
-           endColumnMed= numColumns + midFilter;
-           if (endColumnMed > params->newImage->numColumns ) {endColumnMed=params->newImage->numColumns;}
+               endRowMed= numRows + midFilter;
+               if (endRowMed > params->newImage->numRows) {endRowMed=params->newImage->numRows;}
 
-           printf("\nBR: %d ER: %d BC: %d EC: %d", beginRowMed,endRowMed,beginColumnMed,endColumnMed);
+               endColumnMed= numColumns + midFilter;
+               if (endColumnMed > params->newImage->numColumns ) {endColumnMed=params->newImage->numColumns;}
 
-           /*sum submatrix  FILTERxFILTER*/
-           for (i= beginRowMed-1; i< endRowMed; i++){
-                for(j=beginColumnMed-1; j< endColumnMed; j++){
-                    fscanf(params->input, "%d", &currentValue);
-                    sumMed= sumMed +currentValue;
-                    divMed++;
-                    printf("\ncurrent: %d sumMed: %d divMed: %d", currentValue, sumMed,divMed);
-                 }
-           }
+               printf("\nBR: %d ER: %d BC: %d EC: %d", beginRowMed,endRowMed,beginColumnMed,endColumnMed);
 
-            /* SAVE THE MEDIAN */
-            params->newImage->image[numRows][numColumns] = (sumMed - imgValue)/divMed;
-          }
+               /*sum submatrix  FILTERxFILTER*/
+               for (i= beginRowMed-1; i< endRowMed; i++){
+                    for(j=beginColumnMed-1; j< endColumnMed; j++){
+                        sumMed= sumMed + &params->image->image[i][j];
+                        divMed++;
+                        printf("\ncurrent: %d sumMed: %d divMed: %d", &params->image->image[i][j], sumMed,divMed);
+                     }
+               }
+               pthread_mutex_unlock(&m);
+                /* SAVE THE MEDIAN */
+               params->newImage->image[numRows][numColumns] = (sumMed - imgValue)/divMed;
+         }
        }
 }
 
@@ -237,7 +236,7 @@ int main(int argc, char *argv[]) {
 	struct PGMImage image;
 
 	/* Variable for the threads creation and filter's number*/
-	int numThreads = 1;
+	int numThreads = 4;
     int numFilter= 3;
 
 	/* Calls method to read PGM image */
