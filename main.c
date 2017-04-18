@@ -16,9 +16,6 @@ struct PGMImage{
 	int** image;
 };
 
-struct SubMatrix{
-};
-
 struct Params{
 	int beginRow;
 	int endRow;
@@ -33,48 +30,62 @@ struct Params{
 /* Updates the pixel values of a given portion of the image */
 void *updateValues(void *parameters){
 	struct Params *params = parameters;
-	int currentValue, numRows, numColumns;
-	int sumMed;
-	int matrixColumn, matrixRow;
+	int currentValue, numRows, numColumns,i,j;
+	int imgValue, sumMed, divMed;
 
-    int midFilter = params->filter/2;
+    int midFilter = (params->filter-1)/2;
+    printf("\nmidFilter: %d ", midFilter);
+
+    /*submatrix limits */
+    int beginRowMed, endRowMed, beginColumnMed, endColumnMed;
+
 
     /*UPDATE VALUES*/
 	/* Reads and updates in the struct image the values in every pixel */
 	for(numRows=params->beginRow; numRows<params->endRow; numRows++){
-	    sumMed=0;
 		for(numColumns=params->beginColumn; numColumns<params->endColumn; numColumns++){
+           sumMed=0; divMed=0;
            /* pthread_mutex_lock(&m);*/
-           fscanf(params->input, "%d", &currentValue);
+           imgValue= fscanf(params->input, "%d", &currentValue);
            printf("\nROW: %d COLUMNS: %d", numRows,numColumns);
 
-          /*sum submatrix  FILTERxFILTER*/
-          for (matrixColumn= 0; matrixColumn < params->filter; matrixColumn++){
+           /*discover the limits*/
+           if (numRows>= midFilter ){
+               beginRowMed= numRows - midFilter;
+           }else{
+               beginRowMed=0;
+           }
 
-               for(matrixRow =0; matrixRow < params->filter; matrixRow++){
-                   printf("\nMatrixROW: %d", matrixRow);
+           if (numColumns>= midFilter){
+               beginColumnMed= numColumns - midFilter;
+           }else{
+               beginColumnMed= 0;
+           }
+			
+           endRowMed= numRows + midFilter;
+           if (endRowMed > params->newImage->numRows) {endRowMed=params->newImage->numRows;}
 
-                   /*if isn't the middle to matrix, the same number*/
+           endColumnMed= numColumns + midFilter;
+           if (endColumnMed > params->newImage->numColumns ) {endColumnMed=params->newImage->numColumns;}
 
-                   if (numRows!=midFilter && numColumns!=midFilter){
-                       printf("\nSUB ROW: %d SUB COLUMNS: %d", matrixRow,matrixColumn);
-                       sumMed = sumMed + (params->image->image[numRows+matrixRow][numColumns + matrixColumn]);
-                       printf("\nSUM: %d", sumMed);
-                   }
+           printf("\nBR: %d ER: %d BC: %d EC: %d", beginRowMed,endRowMed,beginColumnMed,endColumnMed);
+
+           /*sum submatrix  FILTERxFILTER*/
+           for (i= beginRowMed-1; i< endRowMed; i++){
+                for(j=beginColumnMed-1; j< endColumnMed; j++){
+                    fscanf(params->input, "%d", &currentValue);
+                    sumMed= sumMed +currentValue;
+                    divMed++;
+                    printf("\ncurrent: %d sumMed: %d divMed: %d", currentValue, sumMed,divMed);
                  }
-            }
-                    /* SAVE THE MEDIAN */
-                    params->newImage->image[numRows][numColumns] = sumMed/params->filter;
-                }
-            }
+           }
 
-                /* pthread_mutex_unlock(&m);
-                if(currentValue <= 200){
-                    imageFilter[numRows][numColumns] = currentValue + 55;
-                } else{
-                    params->image->image[numRows][numColumns] = 255;
-                }*/
+            /* SAVE THE MEDIAN */
+            params->newImage->image[numRows][numColumns] = (sumMed - imgValue)/divMed;
+          }
+       }
 }
+
 
 /* Read the image */
 void readImage(char *fileName[],char *newFileName[], struct PGMImage *image, int nThreads, int nFilter){
@@ -188,7 +199,7 @@ void readImage(char *fileName[],char *newFileName[], struct PGMImage *image, int
 }
 
 /* Save the image */
-void saveImage(char *fileName[], struct PGMImage *image){
+void saveImage(char *fileName[], struct PGMImage *newImage){
 	/* Variables to assist with the saving of the image */
 	FILE *output;
 	int numRows, numColumns;
@@ -198,19 +209,19 @@ void saveImage(char *fileName[], struct PGMImage *image){
 	printf("\nOpening file for writing: %s", fileName);
 
 	/* Write the first line related to the image type */
-	fprintf(output, &image->type);
+	fprintf(output, &newImage->type);
 	fprintf(output, "\n");
-	printf("\nWrote type of file", image->type);
+	printf("\nWrote type of file", newImage->type);
 
 	/* Write number of rows, columns and max value */
-	fprintf(output, "%d %d\n%d\n", image->numRows, image->numColumns, image->maxValue);
+	fprintf(output, "%d %d\n%d\n", newImage->numRows, newImage->numColumns, newImage->maxValue);
 	printf("\nWriting number of rows, columns and max value of brightness");
 
 	/* Writes the file with the new pixels value */
 	printf("\nStart writing the pixels to the image");
-	for(numRows=0; numRows<image->numRows; numRows++){
-		for(numColumns=0; numColumns<image->numColumns; numColumns++){
-			fprintf(output, "%d ", image->image[numRows][numColumns]);
+	for(numRows=0; numRows<newImage->numRows; numRows++){
+		for(numColumns=0; numColumns<newImage->numColumns; numColumns++){
+			fprintf(output, "%d ", newImage->image[numRows][numColumns]);
 		}
 		fprintf(output, "\n");
 	}
@@ -222,7 +233,7 @@ void saveImage(char *fileName[], struct PGMImage *image){
 }
 
 int main(int argc, char *argv[]) {
-	/* Struct to save the image values */
+    /* Struct to save the image values */
 	struct PGMImage image;
 
 	/* Variable for the threads creation and filter's number*/
