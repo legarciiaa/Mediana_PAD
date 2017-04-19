@@ -100,9 +100,6 @@ void *updateValues(void *parameters){
                pthread_mutex_unlock(&m);
                 /* SAVE THE MEDIAN */
                params->newImage->image[numRows][numColumns] = (sumMed - imgValue)/divMed;
-               if (numRows==2 && numColumns==2){
-                    numRows=1;
-               }
          }
        }
        printf("\nMEDIAN FILTER APPLIED ROW %d -> %d x COLUMN %d -> %d",params->beginRow,params->endRow,params->beginColumn,params->endColumn);
@@ -212,7 +209,7 @@ void readImage(char *fileName[],char *newFileName[], struct PGMImage *image, int
 		params[0].image = image;
 		params[0].newImage = newImage;
 		params[0].input = input;
-
+        printf("\nAQUI");
         loadValues(&params[0]);
 		updateValues(&params[0]);
 	}
@@ -270,7 +267,7 @@ int main(int argc, char *argv[]) {
 	struct PGMImage image;
 
 	/* Variable for the threads creation and filter's number*/
-	int numThreads = 4;
+	int numThreads = 1;
     int numFilter= 3;
 
 	/* Calls method to read PGM image */
