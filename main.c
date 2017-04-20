@@ -162,7 +162,7 @@ void readImage(char *fileName[],char *newFileName[], struct PGMImage *image, int
 	rowsByThread = image->numRows/nThreads;
 	columnsByThread = image->numColumns/nThreads;
 
-	/* Start a counter */
+	/* St1~;art a counter */
 	ftime(&start);
 
 	/* If the number of threads is 1 we execute the reading in the main thread, otherwise we create children */
@@ -210,7 +210,7 @@ void readImage(char *fileName[],char *newFileName[], struct PGMImage *image, int
 		params[0].newImage = newImage;
 		params[0].input = input;
 
-        	loadValues(&params[0]);
+        loadValues(&params[0]);
 		updateValues(&params[0]);
 	}
 
@@ -267,10 +267,10 @@ int main(int argc, char *argv[]) {
 	struct PGMImage image;
 
 	/* Variable for the threads creation and filter's number*/
-	int numThreads = 1;
-    int numFilter=3;
-    //printf ("\nEnter the filter's value:");
-    //scanf ("%d", &numFilter);
+	int numThreads = 4;
+    //int numFilter=25;
+    printf ("\nEnter the filter's value:");
+    scanf ("%d", &numFilter);
 
      if ((numFilter%2)==1){
             /* Calls method to read PGM image */
