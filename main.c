@@ -80,21 +80,21 @@ void *updateValues(void *parameters){
                }
 
                endRowMed= numRows + midFilter;
-               if (endRowMed > params->newImage->numRows) {endRowMed=params->newImage->numRows;}
+               if (endRowMed > (params->newImage->numRows-1)) {endRowMed=(params->newImage->numRows)-1;}
 
                endColumnMed= numColumns + midFilter;
-               if (endColumnMed > params->newImage->numColumns ) {endColumnMed=params->newImage->numColumns;}
+               if (endColumnMed > (params->newImage->numColumns-1) ) {endColumnMed=(params->newImage->numColumns)-1;}
 
 
                /*printf("\nBR: %d ER: %d BC: %d EC: %d", beginRowMed,endRowMed,beginColumnMed,endColumnMed);*/
 
                /*sum submatrix  FILTERxFILTER*/
-               for (i= beginRowMed; i< (endRowMed+1); i++){
-                    for(j=beginColumnMed; j< (endColumnMed+1); j++){
+               for (i= beginRowMed; i <= endRowMed; i++){
+                    for(j=beginColumnMed; j <= endColumnMed; j++){
+                        /*printf("\nROW %d, COLUNM %d i:%d j: %d current: %d sumMed: %d divMed: %d",numRows,numColumns, i,j, currentValue, sumMed,divMed);*/
                         currentValue=  params->image->image[i][j];
                         sumMed= sumMed + currentValue;
                         divMed++;
-                        /*printf("\ni:%d j: %d current: %d sumMed: %d divMed: %d",i,j, currentValue, sumMed,divMed);*/
                      }
                }
                pthread_mutex_unlock(&m);
@@ -209,7 +209,7 @@ void readImage(char *fileName[],char *newFileName[], struct PGMImage *image, int
 		params[0].image = image;
 		params[0].newImage = newImage;
 		params[0].input = input;
-        
+
         	loadValues(&params[0]);
 		updateValues(&params[0]);
 	}
@@ -265,17 +265,16 @@ void saveImage(char *fileName[], struct PGMImage *newImage){
 int main(int argc, char *argv[]) {
     /* Struct to save the image values */
 	struct PGMImage image;
-		
-        int numFilter;
-     	printf ("\nEnter the filter's value:");
-     	scanf ("%d", &numFilter); 
-	
-	if ((numFilter%2)==1){
-	    /* Variable for the threads creation and filter's number*/
-	    int numThreads = 1;
-	    /* Calls method to read PGM image */
-	   readImage(argv[1],argv[2], &image, numThreads, numFilter);
-	}
 
+	/* Variable for the threads creation and filter's number*/
+	int numThreads = 1;
+    int numFilter=3;
+    //printf ("\nEnter the filter's value:");
+    //scanf ("%d", &numFilter);
+
+     if ((numFilter%2)==1){
+            /* Calls method to read PGM image */
+           readImage(argv[1],argv[2], &image, numThreads, numFilter);
+        }
 	return 0;
 }
