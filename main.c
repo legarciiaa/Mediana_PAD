@@ -265,7 +265,7 @@ void saveImage(char *fileName[], struct PGMImage *newImage){
 int main(int argc, char *argv[]) {
     /* Struct to save the image values */
 	struct PGMImage image;
-
+	int numFilter;
 	/* Variable for the threads creation and filter's number*/
 	int numThreads = 4;
     //int numFilter=25;
